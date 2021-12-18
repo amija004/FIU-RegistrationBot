@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from threading import Thread
+import typer
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -65,47 +66,68 @@ class Enroller:
 
     def register(self):
         # wait until 15 minutes before registration to start the browser
-        self.log(f"Waiting to begin until {self.start_time}")
-        pause(self.start_time)
+        #self.log(f"Waiting to begin until {self.start_time}")
+        #pause(self.start_time)
 
         # log in once we hit the start time and navigate to the shopping cart
         self.authenticate()
         self.open_cart()
 
         # pause until 7AM and click immediately after
-        self.log(f"Waiting to enroll until {self.enroll_time}", debug=False)
-        pause(self.enroll_time)
+        #self.log(f"Waiting to enroll until {self.enroll_time}", debug=False)
+        #pause(self.enroll_time)
         self.enroll()
 
+        if self.driver.find_element_by_xpath("//img[@alt='Error']"):
+            time.sleep(360) #sleep 6 minutes
+            self.enroll()
+            
         # clean up stray processes
         if self.headless:
             self.cleanup()
 
     def authenticate(self):
         # setup the web self.driver
-        self.log("Loading SIS")
+        self.log("Loading FIU page")
         self.driver.get(self.base_url)
         # wait for the login screen to load
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "login"))
-        )
+        time.sleep(10)
 
-        self.log("Logging in")
+        self.driver.get("https://mycs.fiu.edu/psc/stdnt/EMPLOYEE/CAMP/c/NUI_FRAMEWORK.PT_LANDINGPAGE.GBL?")
+        time.sleep(5)
+
+        self.log("Entering credentials")
         # enter username & password
-        self.driver.find_element_by_name("userid").send_keys(self.username)
-        self.driver.find_element_by_name("pwd").send_keys(self.password)
+        self.driver.find_element_by_name("username").send_keys(self.username)
+        self.driver.find_element_by_name("password").send_keys(self.password)
 
         # click login
-        self.driver.find_element_by_name("Sign in").click()
-        time.sleep(5)
-        self.driver.find_element_by_xpath(
-            "//img[@alt='a calendar with magnifying glass icon']"
-        ).click()
+        self.log("Logging in")
+        self.driver.find_element_by_name("submit").click()
+        time.sleep(10)
+
+        try:
+            self.log("Clicking remember user")
+            self.driver.find_element_by_id("rememberLabel").click()
+            self.log("Completing Two Factor Authentication")
+            time.sleep(1)
+            self.log("Calling user")
+            self.driver.find_element_by_id("call").click()
+            time.sleep(30)
+        except BaseException:
+            pass
+
+        self.log("Opening Manage Classes")
+        self.driver.find_element_by_id("PTNUI_LAND_REC14$0_row_7").click()
         time.sleep(5)
 
     def open_cart(self):
         self.log("Opening shopping cart.")
+        self.driver.find_element_by_link_text("Enrollment").click()
+        # Expand Enrollment dropdown menu
+        time.sleep(2)
         self.driver.find_element_by_link_text("Shopping Cart").click()
+        # Open shopping cart
         time.sleep(5)
         try:
             self.driver.find_element_by_link_text(self.term).click()
@@ -113,6 +135,7 @@ class Enroller:
         except BaseException:
             pass
 
+    def enroll(self):
         try:
             self.log("Selecting courses...")
             # Select all courses in shopping cart
@@ -124,13 +147,13 @@ class Enroller:
             # self.driver.save_screenshot("preenroll_{}.png".format(self.enroll_time))
 
             self.log("Clicking enroll.")
-            self.driver.find_element_by_link_text("Enroll").click()
+            self.driver.find_element_by_id("DERIVED_SSR_FL_SSR_ENROLL_FL").click()
         except BaseException:
             print("No courses in shopping cart. Terminating script.")
             exit(0)
 
-    def enroll(self):
-        self.driver.find_element_by_link_text("Yes").click()
+        self.log("Confirming enrollment")
+        typer.run(self.test_yes)
         self.log(f"Enroll request sent at {datetime.now()}", debug=False)
         time.sleep(10)
         if self.headless:
@@ -140,3 +163,12 @@ class Enroller:
         if self.headless:
             self.driver.quit()
         exit(0)
+
+    def test_yes(self, keyword: str = typer.Option(None, prompt="class_name", help="class_name")):
+
+        try:
+            self.driver.find_element(By.XPATH, keyword).click()
+        except BaseException:
+            self.log("Enrollment failed")
+            self.driver.quit()
+            exit(0)

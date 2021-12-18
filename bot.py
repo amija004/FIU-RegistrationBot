@@ -13,17 +13,17 @@ class BrowserType(str, Enum):
     CHROME = "chrome"
 
 def main(
-    username: str = typer.Option(None, prompt="SIS Username", help="SIS Username"),
+    username: str = typer.Option(None, prompt="Panther ID", help="FIU Panther ID"),
     password: str = typer.Option(
         None,
-        prompt="SIS Password",
+        prompt="FIU Password",
         confirmation_prompt=True,
         hide_input=True,
-        help="SIS Password",
+        help="FIU Password",
     ),
     url: str = typer.Option(
-        "https://sisadmin.case.edu/psp/P92SCWR/?cmd=login",
-        help="SIS base URL to use",
+        "https://mycs.fiu.edu/psp/stdnt/?cmd=login",
+        help="FIU base URL to use",
     ),
     threads: int = typer.Option(1, help="the number of instances to run"),
     browser: BrowserType = typer.Option(BrowserType.FIREFOX, help="the browser instance to run"),
@@ -40,6 +40,9 @@ def main(
     Browser, Options = (
         (Firefox, FirefoxOptions) if browser == BrowserType.FIREFOX else (Chrome, ChromeOptions)
     )
+    # Sets the cookie folder to stay logged in
+    options = FirefoxOptions()
+    options.add_argument("user-date-dir=cookies")
 
     # if it's the day of registration
     today = datetime.now()
