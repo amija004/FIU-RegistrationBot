@@ -4,13 +4,6 @@ If you need to register for a full class, this bot will keep trying to enroll yo
 
 ### Install Instructions
 
-Clone the repository and navigate to its directory.
-
-```bash
-git clone https://github.com/kclejeune/RegistrationBot.git
-cd RegistrationBot
-```
-
 Ensure that Firefox, firefox-geckodriver, Python3, and pip are installed. Use pip to install selenium and typer.
 
 On Debian based distributions (Ubuntu and Pop_OS! tested):
@@ -23,7 +16,9 @@ $ sudo apt install python3 pip3 firefox firefox-geckodriver
 $ pip install selenium typer
 $ python3 bot.py
 ```
-For Windows, the simplest method found was to install Ubuntu from the Windows app store, and then use the above instructions. Only Ubuntu was tested, but other Debian based distributions should work.
+For Windows, the simplest method found was to install Ubuntu from the Windows app store, and then use the above instructions. Only Ubuntu was tested, but other Debian based distributions should work. You may have to restart Ubuntu for the installations to be added to the path.
+
+MacOS was not tested, but should work if the required dependencies are installed.
 
 ## Using the Script
 
