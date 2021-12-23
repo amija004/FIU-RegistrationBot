@@ -28,6 +28,10 @@ It is *highly* recommended that you use a computer that is on 24/7 with SLEEP DI
 
 The script is intended to run until you get your classes or you get logged out.
 
+Before running the script, make sure that only the classes you want are in your shopping cart, and ideally only classes for the semester you are trying to enroll in. Tests were only conducted for classes in the Spring semester.
+
+**The script will attempt to enroll in all classes in the shopping cart**
+
 To test the script in an actual browser window, run:
 
 ```bash
@@ -42,5 +46,10 @@ $ python3 bot.py
 
 Follow the instructions to enter your username and password (type carefully, you can't see the prompt for security reasons).
 Enter 1 for Spring, 2 for Summer, 3 for Fall. This should only matter if you have shopping carts for each semester.
+
 The system will attempt to use the call function of the 2 Factor Authentication to authenticate. You should receive the call shortly after starting the script.
-That's it, good luck!
+
+It will then attempt to enroll you in all the classes in your shopping cart every 6 minutes. Tests were conducted with 1 and 2 classes in the shopping cart without issue.
+
+Feedback is appreciated :)
+That's it, good luck! 
