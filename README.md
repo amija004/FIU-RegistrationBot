@@ -6,7 +6,7 @@ If you need to register for a full class, this bot will keep trying to enroll yo
 
 Ensure that Firefox, firefox-geckodriver, Python3, and pip are installed. Use pip to install selenium and typer.
 
-On Debian based distributions (Ubuntu and Pop_OS! tested):
+On Debian based distributions (Ubuntu and Pop!_OS tested):
 
 ```bash
 $ git clone https://github.com/amija004/FIU-RegistrationBot
