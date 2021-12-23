@@ -8,25 +8,26 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-def pause(until: datetime):
-    """block until a specified datetime
-
-    Args:
-        until (datetime): the time at which to resume program execution
-    """
-    while True:
-        diff = until - datetime.now()
-        if diff.total_seconds() > 0:
-            time.sleep(diff.total_seconds() / 2)
-        else:
-            break
+#def pause(until: datetime):
+#    """block until a specified datetime
+#
+#    Args:
+#        until (datetime): the time at which to resume program execution
+#    """
+#    while True:
+#        diff = until - datetime.now()
+#        if diff.total_seconds() > 0:
+#            time.sleep(diff.total_seconds() / 2)
+#        else:
+#            break
 
 
 class Enroller:
     def __init__(
         self,
-        enroll_time,
-        start_time,
+        #enroll_time,
+        #start_time,
+        #profile,
         term,
         username: str,
         password: str,
@@ -39,10 +40,13 @@ class Enroller:
         test=False,
     ):
         self.driver = self._browser_init(
-            Browser=browser, Options=opts, headless=headless, size=size
+            Browser=browser, Options=opts, 
+            #Profile=profile, 
+            headless=headless, size=size
         )
-        self.start_time = start_time
-        self.enroll_time = enroll_time
+        #self.start_time = start_time
+        #self.enroll_time = enroll_time
+        #self.profile = profile
         self.term = term
         self.thread = Thread(target=self.register)
         self.headless = headless
@@ -52,10 +56,14 @@ class Enroller:
         self.username = username
         self.password = password
 
-    def _browser_init(self, Browser, Options, headless=False, size=(1920, 1080)):
+    def _browser_init(self, Browser, Options, 
+        #Profile, 
+        headless=False, size=(1920, 1080)):
         options = Options()
-        options.headless = headless
-        driver = Browser(options=options)
+        options.add_argument("-headless")
+        driver = Browser(
+            #firefox_profile=Profile, 
+            options=options)
         if headless:
             driver.set_window_size(size[0], size[1])
         return driver
@@ -68,20 +76,14 @@ class Enroller:
         # wait until 15 minutes before registration to start the browser
         #self.log(f"Waiting to begin until {self.start_time}")
         #pause(self.start_time)
-
-        # log in once we hit the start time and navigate to the shopping cart
+        added = False
+        # log in
         self.authenticate()
-        self.open_cart()
-
-        # pause until 7AM and click immediately after
-        #self.log(f"Waiting to enroll until {self.enroll_time}", debug=False)
-        #pause(self.enroll_time)
-        self.enroll()
-
-        if self.driver.find_element_by_xpath("//img[@alt='Error']"):
-            time.sleep(360) #sleep 6 minutes
-            self.enroll()
-            
+        while not added:
+            # navigate to the shopping cart
+            self.open_cart()     
+            # Select and enroll in classes   
+            self.enroll()                    
         # clean up stray processes
         if self.headless:
             self.cleanup()
@@ -104,7 +106,7 @@ class Enroller:
         # click login
         self.log("Logging in")
         self.driver.find_element_by_name("submit").click()
-        time.sleep(10)
+        time.sleep(5)
 
         try:
             self.log("Clicking remember user")
@@ -123,12 +125,14 @@ class Enroller:
 
     def open_cart(self):
         self.log("Opening shopping cart.")
-        self.driver.find_element_by_link_text("Enrollment").click()
-        # Expand Enrollment dropdown menu
-        time.sleep(2)
-        self.driver.find_element_by_link_text("Shopping Cart").click()
-        # Open shopping cart
-        time.sleep(5)
+        try:
+            self.driver.find_element_by_link_text("Shopping Cart").click()
+        except BaseException:
+            # Expand Enrollment dropdown menu
+            self.driver.find_element_by_link_text("Enrollment").click()
+            time.sleep(1)
+            self.driver.find_element_by_link_text("Shopping Cart").click()
+        time.sleep(3)
         try:
             self.driver.find_element_by_link_text(self.term).click()
             time.sleep(5)
@@ -150,25 +154,27 @@ class Enroller:
             self.driver.find_element_by_id("DERIVED_SSR_FL_SSR_ENROLL_FL").click()
         except BaseException:
             print("No courses in shopping cart. Terminating script.")
-            exit(0)
+            added = True
 
         self.log("Confirming enrollment")
-        typer.run(self.test_yes)
-        self.log(f"Enroll request sent at {datetime.now()}", debug=False)
-        time.sleep(10)
-        if self.headless:
-            self.driver.save_screenshot(f"confirm_page_{self.enroll_time}.png")
+        time.sleep(1)
+        try:
+            self.driver.find_element(By.ID, "#ICYes").click()
+            self.log(f"Enroll request sent at {datetime.now()}, screenshot saved", debug=False)
+            time.sleep(3)
+            self.driver.save_screenshot(f"enroll_attempt{datetime.now()}.png")
+            self.log("If classes still in cart, will try again in 6 minutes")
+        except BaseException:
+            self.log("Couldn't confirm, screenshot saved, will retry in 6 minutes")
+            self.driver.save_screenshot(f"enroll_fail{datetime.now()}.png")
+        
+        time.sleep(360)
+
+        #time.sleep(10)
+        #if self.headless:
+        #    self.driver.save_screenshot(f"confirm_page_{self.enroll_time}.png")
 
     def cleanup(self):
         if self.headless:
             self.driver.quit()
         exit(0)
-
-    def test_yes(self, keyword: str = typer.Option(None, prompt="class_name", help="class_name")):
-
-        try:
-            self.driver.find_element(By.XPATH, keyword).click()
-        except BaseException:
-            self.log("Enrollment failed")
-            self.driver.quit()
-            exit(0)
