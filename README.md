@@ -11,11 +11,19 @@ git clone https://github.com/kclejeune/RegistrationBot.git
 cd RegistrationBot
 ```
 
-Ensure that Firefox, Python3, and pip are installed.
+Ensure that Firefox, firefox-geckodriver, Python3, and pip are installed. Use pip to install selenium and typer.
 
-Use pip to install these dependencies to run the project:
-- `selenium`
-- `geckodriver`
+On Debian based distributions (Ubuntu and Pop_OS! tested):
+
+```bash
+$ git clone https://github.com/amija004/FIU-RegistrationBot
+$ cd FIU-RegistrationBot
+$ sudo apt update && sudo apt upgrade -y
+$ sudo apt install python3 pip3 firefox firefox-geckodriver
+$ pip install selenium typer
+$ python3 bot.py
+```
+For Windows, the simplest method found was to install Ubuntu from the Windows app store, and then use the above instructions. Only Ubuntu was tested, but other Debian based distributions should work.
 
 ## Using the Script
 
